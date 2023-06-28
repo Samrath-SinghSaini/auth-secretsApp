@@ -5,9 +5,11 @@ const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const User = require('./model')
 const mongoose = require('mongoose')
+const encrypt = require('mongoose-encryption'); 
 app.use(bodyParser.urlencoded({extended:true}))
 app.set('view engine', 'ejs')
 app.use(express.static('public'))
+
 connectDb()
 //get routes 
 app.get("/",(req,res)=>{
