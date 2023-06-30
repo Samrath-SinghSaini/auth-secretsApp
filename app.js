@@ -5,7 +5,9 @@ const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const User = require('./model')
 const mongoose = require('mongoose')
-const encrypt = require('mongoose-encryption'); 
+const ecrypt = require('mongoose-encryption'); 
+const bcrypt = require('bcrypt')
+const saltRounds = 5
 app.use(bodyParser.urlencoded({extended:true}))
 app.set('view engine', 'ejs')
 app.use(express.static('public'))
@@ -23,29 +25,39 @@ app.get("/register",(req,res)=>{
     res.render('register')
 })
 //post routes 
-app.post("/register", (req, res)=>{
+app.post("/register", async (req, res)=>{
     let username = req.body.username
     let password = req.body.password
-    console.log("From register:post\n" + username+"\n"+password)
-    addUser(username, password).then(res.render('secrets'))
+    let hashedPass = await bcrypt.hash(password, saltRounds, (err, hash)=>{
+       if(err){
+        console.log(err)}
+        else{
+            console.log("From register:post\n" + username+"\n"+hash)
+            addUser(username, hash).then(res.render('secrets'))
+        }
+    })
+   
     
 })
 
 app.post("/login",async (req, res)=>{
     let username = req.body.username
     let password = req.body.password
-    console.log("entered pass is: "+ password)
+   
     let foundUser = await findUser(username)
-    if(foundUser){
-        if(foundUser.password === password){
-            res.render('secrets')
+    bcrypt.compare(password, foundUser.password, (err, result)=>{
+        if(err){
+            console.log(err)
+        } else{
+            if(result){
+                console.log("passwords match")
+                res.render('secrets')
+            } else{
+                console.log("Password is incorrect")
+            }
         }
-        else{
-            console.log("Pass is incorrect")
-        }
-    } else{
-        console.log("User not found")
-    }
+    })
+    
 })
 
 
